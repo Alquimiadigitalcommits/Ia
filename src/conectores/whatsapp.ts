@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import type { Config } from "./config.js";
+import type { Config } from "../nucleo/config.js";
 
 /** Mensaje entrante ya normalizado (solo lo que usamos). */
 export interface MensajeEntrante {

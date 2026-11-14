@@ -12,16 +12,20 @@
     "start": "tsx scripts/local-server.ts",
     "probar": "tsx scripts/probar-clasificacion.ts",
     "importar": "tsx scripts/importar-chat.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "revisar": "tsc --noEmit && vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
+    "@netlify/blobs": "^11.1.9",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@netlify/functions": "^6.1.1",
     "@types/node": "^26.6.6",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   }
 }

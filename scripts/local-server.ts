@@ -1,9 +1,9 @@
 // Servidor local para probar con ngrok:  npm run dev  →  ngrok http 3000
 // Usa la misma lógica que la función de Netlify.
 import { createServer } from "node:http";
-import { cargarConfig } from "../src/config.js";
-import { procesarTodos } from "../src/procesar.js";
-import { extraerMensajes, firmaValida, verificarWebhook } from "../src/whatsapp.js";
+import { cargarConfig } from "../src/nucleo/config.js";
+import { procesarTodos } from "../src/canales/whatsapp.js";
+import { extraerMensajes, firmaValida, verificarWebhook } from "../src/conectores/whatsapp.js";
 
 try { process.loadEnvFile(".env"); } catch {} // .env es opcional
 const cfg = cargarConfig();

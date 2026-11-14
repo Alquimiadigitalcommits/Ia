@@ -1,4 +1,4 @@
-// Importa el historial del grupo "Ideas" a la base "Ideas TikTok" de Notion.
+// Importa el historial del grupo "Ideas" a la base "Ideas y referencias" de Notion.
 //
 // 1. En WhatsApp: grupo Ideas → ⋮ / nombre del grupo → Exportar chat → Sin archivos.
 // 2. Guarda el .txt (si viene en .zip, descomprímelo).
@@ -9,8 +9,10 @@
 // Se puede correr varias veces: lo que ya está en Notion se salta.
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { agrupar, leerChat } from "../src/chat-export.js";
-import { guardarIdeaTikTok } from "../src/tiktok.js";
+import { crearClienteNotion } from "../src/conectores/notion.js";
+import { agrupar, leerChat } from "../src/ideas/chat-export.js";
+import { guardarIdea } from "../src/ideas/guardar.js";
+import { registroArchivo } from "../src/nucleo/idempotencia.js";
 
 try { process.loadEnvFile(".env"); } catch {} // .env es opcional
 
@@ -48,12 +50,14 @@ if (prueba) {
 }
 
 const token = process.env.NOTION_TOKEN;
-const databaseId = process.env.NOTION_TIKTOK_DATABASE_ID;
-if (!token || !databaseId || !process.env.ANTHROPIC_API_KEY) {
-  console.error("Faltan NOTION_TOKEN, NOTION_TIKTOK_DATABASE_ID o ANTHROPIC_API_KEY en .env");
+const databaseId = process.env.NOTION_DB_IDEAS || "c2b5071b2e6d48c384d748b77ac1ab8b";
+if (!token || !process.env.ANTHROPIC_API_KEY) {
+  console.error("Faltan NOTION_TOKEN o ANTHROPIC_API_KEY en .env");
   process.exit(1);
 }
-const destino = { token, databaseId };
+const notion = crearClienteNotion(token);
+// Junto al chat queda "chat.txt.importados.json" con lo ya importado.
+const procesados = registroArchivo(`${archivo}.importados.json`);
 
 let creadas = 0, saltadas = 0, errores = 0, sinClasificar = 0;
 const cola = [...ideas];
@@ -61,10 +65,11 @@ async function trabajador() {
   for (let i = cola.shift(); i; i = cola.shift()) {
     const id = "chat-" + createHash("sha1").update(`${i.fecha.toISOString()}|${i.texto}`).digest("hex").slice(0, 16);
     try {
-      const r = await guardarIdeaTikTok(destino, {
+      const r = await guardarIdea(notion, databaseId, procesados, {
         idOrigen: id,
         fecha: i.fecha,
         texto: i.texto,
+        remitente: i.autor,
         origen: "Importado del grupo",
         tipoAdjunto: i.adjuntos.length ? i.adjuntos.join(", ") : undefined,
       });
@@ -72,7 +77,7 @@ async function trabajador() {
       else {
         creadas++;
         if (!r.idea) sinClasificar++;
-        console.log(`✓ ${r.idea?.titulo ?? i.texto.slice(0, 60)}`);
+        console.log(`✓ ${r.idea?.titulo ?? i.texto.slice(0, 60)}  →  ${r.clientes.join(", ") || "sin cliente"}`);
       }
     } catch (e) {
       errores++;
@@ -80,6 +85,6 @@ async function trabajador() {
     }
   }
 }
-// 3 en paralelo: respeta el límite de Notion (~3 solicitudes por segundo).
+// 3 en paralelo: con los reintentos del conector, respeta el límite de Notion.
 await Promise.all([trabajador(), trabajador(), trabajador()]);
 console.log(`\nListo. Creadas: ${creadas} (sin clasificar: ${sinClasificar}) · Ya existían: ${saltadas} · Errores: ${errores}`);

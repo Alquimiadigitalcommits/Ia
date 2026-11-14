@@ -7,8 +7,6 @@ export interface Contacto {
   rol: Rol;
   /** Para rol "cliente": a qué cliente pertenecen sus ideas. */
   cliente?: string;
-  /** "tiktok" = sus mensajes van a la base personal "Ideas TikTok". Por defecto "agencia". */
-  destino?: "agencia" | "tiktok";
 }
 
 function requerida(nombre: string): string {
@@ -32,9 +30,8 @@ export function cargarConfig() {
     },
     notion: {
       token: requerida("NOTION_TOKEN"),
-      databaseId: requerida("NOTION_DATABASE_ID"),
-      /** Base "Ideas TikTok" (opcional). */
-      tiktokDatabaseId: process.env.NOTION_TIKTOK_DATABASE_ID ?? "",
+      /** Base existente "Ideas y referencias" (relacionada con Clientes). */
+      ideasDatabaseId: process.env.NOTION_DB_IDEAS || "c2b5071b2e6d48c384d748b77ac1ab8b",
     },
     contactos,
     clientes,
@@ -43,31 +40,28 @@ export function cargarConfig() {
 
 export type Config = ReturnType<typeof cargarConfig>;
 
-/** Opciones fijas de la base de Notion. Si cambias una aquí, cámbiala también en Notion. */
-export const PLATAFORMAS = ["TikTok", "Instagram", "YouTube", "Kick", "Otra"] as const;
+/**
+ * Opciones de la base "Ideas y referencias" de Notion (deben coincidir exactamente).
+ * Si agregas una opción en Notion, agrégala aquí para que Claude pueda elegirla.
+ */
+export const PLATAFORMAS = ["YouTube", "Kick", "TikTok", "Instagram", "Otra"] as const;
 export const FORMATOS = [
-  "Reel / TikTok",
-  "Carrusel",
-  "Historia",
-  "Post estático",
-  "Short",
+  "Video corto vertical",
   "Video largo",
-  "Stream",
-  "Sin definir",
-] as const;
-export const PILARES = [
-  "Educativo",
-  "Entretenimiento",
-  "Comunidad",
-  "Venta / Promoción",
-  "Detrás de cámaras",
-  "Tendencia",
+  "Transmisión en vivo",
+  "Clip de transmisión",
+  "Carrusel",
+  "Imagen",
+  "Historia",
+  "Texto o post",
+  "Otro",
 ] as const;
 export const PRIORIDADES = ["Alta", "Media", "Baja"] as const;
+export const FUENTES = ["Tendencia", "Competidor", "Referente", "Cliente", "Equipo", "Otra"] as const;
 
-/** Base personal "Ideas TikTok". */
-export const NICHOS = ["Videojuegos", "Lifestyle", "Skincare", "Panoramas", "Otro"] as const;
-export const TIPOS_TIKTOK = [
+/** Guía para Claude (en Notion "Nicho" es texto libre). */
+export const NICHOS = ["Videojuegos", "Lifestyle", "Skincare", "Panoramas", "Gastronomía", "Humor", "Historias", "Marketing", "Otro"] as const;
+export const TIPOS_VIDEO = [
   "Tendencia / audio",
   "Storytime",
   "Tutorial / paso a paso",
@@ -78,5 +72,6 @@ export const TIPOS_TIKTOK = [
   "Humor / sketch",
   "Recomendación / panorama",
   "Respuesta a comentario",
+  "Producto / receta",
   "Otro",
 ] as const;

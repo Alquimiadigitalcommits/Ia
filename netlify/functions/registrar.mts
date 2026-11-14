@@ -1,6 +1,6 @@
 import type { Config } from "@netlify/functions";
-import { claveValida, json } from "../../src/acceso.js";
-import { basesDesdeEntorno, registrar, type Registro } from "../../src/personal.js";
+import { claveValida, json } from "../../src/nucleo/acceso.js";
+import { basesDesdeEntorno, registrar, type Registro } from "../../src/personal/personal.js";
 
 const valido = (r: any): r is Registro =>
   (r?.tipo === "agua" && Number.isFinite(r.vasos) && Math.abs(r.vasos) <= 10) ||

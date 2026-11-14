@@ -1,6 +1,6 @@
 // Datos personales del dashboard: lee y escribe las bases de la página "Mi día" en Notion.
+import { crearClienteNotion, escribir, leer, type ClienteNotion } from "../conectores/notion.js";
 
-const NOTION_VERSION = "2022-06-28";
 export const ZONA = process.env.ZONA_HORARIA ?? "America/Santiago";
 
 export interface BasesPersonales {
@@ -49,34 +49,9 @@ export const sumarDias = (iso: string, n: number) => {
 export const diasEntre = (desde: string, hasta: string) =>
   Math.round((Date.parse(`${hasta}T12:00:00Z`) - Date.parse(`${desde}T12:00:00Z`)) / 86_400_000);
 
-// ─────────────────────────── Notion ───────────────────────────
-
-async function notion(token: string, metodo: "GET" | "POST" | "PATCH", ruta: string, cuerpo?: unknown) {
-  const res = await fetch(`https://api.notion.com/v1/${ruta}`, {
-    method: metodo,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Notion-Version": NOTION_VERSION,
-      "Content-Type": "application/json",
-    },
-    body: cuerpo ? JSON.stringify(cuerpo) : undefined,
-  });
-  const json: any = await res.json();
-  if (!res.ok) throw new Error(`Notion ${ruta} ${res.status}: ${json.message ?? ""}`);
-  return json;
-}
-
-const consultar = (token: string, db: string, cuerpo: object = {}) =>
-  notion(token, "POST", `databases/${db}/query`, { page_size: 100, ...cuerpo }).then((r) => r.results as any[]);
-
-// Lectores de propiedades
+// Lectores de propiedades (vienen del conector único de Notion)
 type Props = Record<string, any>;
-const txt = (p: any): string => (p?.title ?? p?.rich_text ?? []).map((t: any) => t.plain_text).join("");
-const num = (p: any): number | null => (typeof p?.number === "number" ? p.number : null);
-const sel = (p: any): string | null => p?.select?.name ?? null;
-const multi = (p: any): string[] => (p?.multi_select ?? []).map((o: any) => o.name);
-const chk = (p: any): boolean => Boolean(p?.checkbox);
-const fecha = (p: any): string | null => p?.date?.start?.slice(0, 10) ?? null;
+const { texto: txt, numero: num, opcion: sel, opciones: multi, casilla: chk, fecha } = leer;
 
 // ─────────────────────────── Cálculos (funciones puras, se pueden probar sin Notion) ───────────────────────────
 
@@ -136,22 +111,22 @@ export interface EventoDelDia {
   tipo: "medicamento" | "kine" | "ejercicio" | "fecha";
 }
 
-export async function resumen(b: BasesPersonales, ahora = new Date()) {
+export async function resumen(b: BasesPersonales, ahora = new Date(), cli: ClienteNotion = crearClienteNotion(b.token)) {
   const hoy = fechaISO(ahora);
   const dia = diaSemana(hoy);
   const hace6 = sumarDias(hoy, -6);
 
   const [registros, meds, plan, fechas, periodos, lecturas, proyectos] = await Promise.all([
-    consultar(b.token, b.registro, {
+    cli.consultar(b.registro, {
       filter: { property: "Fecha", date: { on_or_after: hace6 } },
       sorts: [{ property: "Fecha", direction: "ascending" }],
     }),
-    consultar(b.token, b.medicamentos, { filter: { property: "Activo", checkbox: { equals: true } } }),
-    consultar(b.token, b.plan, { filter: { property: "Activo", checkbox: { equals: true } } }),
-    consultar(b.token, b.fechas),
-    consultar(b.token, b.ciclo, { sorts: [{ property: "Inicio", direction: "descending" }], page_size: 13 }),
-    consultar(b.token, b.lecturas, { filter: { property: "Estado", select: { equals: "Leyendo" } } }),
-    b.proyectos ? consultar(b.token, b.proyectos, { page_size: 20 }).catch(() => []) : Promise.resolve([]),
+    cli.consultar(b.medicamentos, { filter: { property: "Activo", checkbox: { equals: true } } }),
+    cli.consultar(b.plan, { filter: { property: "Activo", checkbox: { equals: true } } }),
+    cli.consultar(b.fechas),
+    cli.consultar(b.ciclo, { sorts: [{ property: "Inicio", direction: "descending" }], page_size: 13 }),
+    cli.consultar(b.lecturas, { filter: { property: "Estado", select: { equals: "Leyendo" } } }),
+    b.proyectos ? cli.consultar(b.proyectos, { page_size: 20 }).catch(() => []) : Promise.resolve([]),
   ]);
 
   // Semana (rellena los días sin registro)
@@ -280,21 +255,19 @@ export type Resumen = Awaited<ReturnType<typeof resumen>>;
 
 // ─────────────────────────── Escrituras rápidas (dashboard y bot) ───────────────────────────
 
-async function filaDeHoy(b: BasesPersonales, hoy: string) {
-  const [fila] = await consultar(b.token, b.registro, {
+async function filaDeHoy(cli: ClienteNotion, b: BasesPersonales, hoy: string) {
+  const [fila] = await cli.consultar(b.registro, {
     filter: { property: "Fecha", date: { equals: hoy } },
     page_size: 1,
   });
-  if (fila) return fila;
-  return notion(b.token, "POST", "pages", {
-    parent: { database_id: b.registro },
-    properties: {
-      "Día": { title: [{ text: { content: hoy } }] },
-      Fecha: { date: { start: hoy } },
-      "Agua (vasos)": { number: 0 },
-      "Meta agua": { number: 8 },
-    },
+  if (fila) return { id: fila.id as string, properties: fila.properties as Props };
+  const nueva = await cli.crearPagina(b.registro, {
+    "Día": escribir.titulo(hoy),
+    Fecha: escribir.fecha(hoy),
+    "Agua (vasos)": escribir.numero(0),
+    "Meta agua": escribir.numero(8),
   });
+  return { id: nueva.id, properties: {} as Props };
 }
 
 export type Registro =
@@ -308,8 +281,13 @@ export type Registro =
 const HUMOR = { 1: "1 Muy bajo", 2: "2 Bajo", 3: "3 Normal", 4: "4 Bien", 5: "5 Muy bien" } as const;
 
 /** Suma o actualiza el registro de hoy. Agua, ejercicio y lectura se suman; el resto se reemplaza. */
-export async function registrar(b: BasesPersonales, r: Registro, ahora = new Date()) {
-  const fila = await filaDeHoy(b, fechaISO(ahora));
+export async function registrar(
+  b: BasesPersonales,
+  r: Registro,
+  ahora = new Date(),
+  cli: ClienteNotion = crearClienteNotion(b.token),
+) {
+  const fila = await filaDeHoy(cli, b, fechaISO(ahora));
   const p = fila.properties as Props;
   const props: Record<string, unknown> = {};
   switch (r.tipo) {
@@ -332,7 +310,7 @@ export async function registrar(b: BasesPersonales, r: Registro, ahora = new Dat
       props["Horas de sueño"] = { number: r.horas };
       break;
   }
-  const actualizada = await notion(b.token, "PATCH", `pages/${fila.id}`, { properties: props });
+  const actualizada = await cli.actualizarPagina(fila.id, props);
   return actualizada.properties as Props;
 }
 

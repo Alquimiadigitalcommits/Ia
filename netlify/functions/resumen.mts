@@ -1,6 +1,6 @@
 import type { Config } from "@netlify/functions";
-import { claveValida, json } from "../../src/acceso.js";
-import { basesDesdeEntorno, resumen } from "../../src/personal.js";
+import { claveValida, json } from "../../src/nucleo/acceso.js";
+import { basesDesdeEntorno, resumen } from "../../src/personal/personal.js";
 
 export default async (req: Request) => {
   if (!claveValida(req)) return json({ error: "Clave incorrecta" }, 401);

@@ -1,4 +1,4 @@
-import fichas from "../clientes.json" with { type: "json" };
+import fichas from "../../clientes.json" with { type: "json" };
 
 /** Ficha de cada cliente. Claude la usa para decidir a quién le sirve una idea. */
 export interface FichaCliente {

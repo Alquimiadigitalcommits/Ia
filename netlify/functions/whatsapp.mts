@@ -1,7 +1,7 @@
 import type { Context } from "@netlify/functions";
-import { cargarConfig } from "../../src/config.js";
-import { procesarTodos } from "../../src/procesar.js";
-import { extraerMensajes, firmaValida, verificarWebhook } from "../../src/whatsapp.js";
+import { cargarConfig } from "../../src/nucleo/config.js";
+import { procesarTodos } from "../../src/canales/whatsapp.js";
+import { extraerMensajes, firmaValida, verificarWebhook } from "../../src/conectores/whatsapp.js";
 
 export default async (req: Request, context: Context) => {
   const cfg = cargarConfig();
