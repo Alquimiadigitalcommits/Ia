@@ -1,18 +1,52 @@
 [
   {
-    "nombre": "Tamara (creadora)",
-    "rubro": "Creadora de contenido: videojuegos (Kick), lifestyle, skincare, panoramas",
-    "publico": "Mujeres y hombres 18-30, gamers y público lifestyle",
-    "temas": ["streams", "juegos nuevos", "setup gamer", "rutina skincare", "panoramas", "día conmigo"],
-    "tono": "Cercano, humor, primera persona",
+    "nombre": "Sky · Marca personal",
+    "notionId": "4046150dcd6881dfb97dc38e559529a6",
+    "rubro": "Marca personal de creadora: videojuegos, panoramas y skincare. Concepto \"de la pantalla a la calle\". Canales separados en YouTube, Kick, TikTok e Instagram",
+    "publico": "Personas de unos 20 años, idealmente mujeres",
+    "temas": ["videojuegos", "streams en Kick", "panoramas y salidas", "skincare", "retos personales y series por días (día 1 aprendiendo a...)", "vida cotidiana con voz en off", "colaboraciones con otros creadores: salidas, desafíos, videos conjuntos"],
+    "tono": "Habla a cámara, cercano, humor. Referentes: Bea Bravo, AuronPlay, Katteyes",
+    "objetivo": "Mini comunidad en 3 meses; comunidad en 6 y 12 meses, con foco en ganar dinero o conseguir canje",
     "evitar": []
   },
   {
-    "nombre": "Marca X",
-    "rubro": "EJEMPLO — reemplazar: marca de skincare",
-    "publico": "Mujeres 20-35",
-    "temas": ["serum", "protector solar", "rutina de noche"],
-    "tono": "Educativo, sin promesas médicas",
-    "evitar": ["comparar con otras marcas"]
+    "nombre": "Plasok",
+    "notionId": "4046150dcd6881a2b55deb13b0a83496",
+    "rubro": "Creador multinicho (Angelo, 23 años): gaming (Warzone, Mario Kart, Roblox), cuidado personal y rulos, tecnología, ejercicio. Lanzamiento YouTube 20 nov 2026",
+    "publico": "Hombres 18-28 de habla hispana (Chile y Latinoamérica). Juegan en consola o celular, ven Shorts y TikTok a diario, humor absurdo. Algunos empiezan a cuidarse: pelo, piel, perfume, ejercicio",
+    "temas": ["gaming", "retos absurdos", "historias con premisa y giro final", "rulos y cuidado del pelo", "tecnología", "ejercicio", "series con nombre propio (Hice / Probé / Gané, Expediente Rulo)"],
+    "tono": "Humor con premisa y giro (estilo Atrapados 133, Noregod). Gancho en los primeros 3 segundos. No gritar todo el video",
+    "objetivo": "Construir comunidad y después monetizar",
+    "evitar": ["política", "polémicas", "mostrar su casa", "mostrar a su familia (la pareja sí puede aparecer)"]
+  },
+  {
+    "nombre": "Sabor a Semilla",
+    "notionId": "4046150dcd6881fab81aebcf216caf99",
+    "rubro": "Minimarket en Agora Mercado, Ñuñoa (Chile). Frutos secos, charcutería, quesos y productos básicos. Precios intermedios, venta por gramo y bolsas pequeñas",
+    "publico": "Vecinos en radio caminable de Ñuñoa, 20-70 años: estudiantes, trabajadores jóvenes, familias, adultos mayores, chilenos y migrantes. Ticket de $10.000 a $15.000. Quieren comer mejor y darse un gusto premium sin gastar de más",
+    "temas": ["frutos secos", "charcutería y quesos", "picoteo", "desayuno: avena, yogurt, frutos secos", "recetas simples", "precios visibles", "porciones chicas", "datos del barrio de Ñuñoa"],
+    "tono": "Cercano, de barrio, precios a la vista. Contenido orgánico",
+    "objetivo": "Mayor visibilidad en redes y aumentar 20% las ventas",
+    "evitar": []
+  },
+  {
+    "nombre": "Medio Relato",
+    "notionId": "4096150dcd688048bf17f94aff40e6fd",
+    "rubro": "Cuenta interna de contenido de historias",
+    "publico": "Pendiente de completar en Notion",
+    "temas": ["historias", "storytime", "relatos"],
+    "tono": "Narrativo",
+    "objetivo": "1000 seguidores en 3 meses",
+    "evitar": []
+  },
+  {
+    "nombre": "Agencia",
+    "notionId": "4046150dcd6881838f0bc954689ddc91",
+    "rubro": "Cuenta interna de Alquimia Digital: redes propias de la agencia (Instagram, YouTube, TikTok)",
+    "publico": "Marcas, emprendedores y creadores que necesitan gestionar sus redes",
+    "temas": ["marketing en redes sociales", "estrategia de contenido", "detrás de cámaras de la agencia", "casos de clientes", "tips para emprendedores"],
+    "tono": "Datos concretos antes que adjetivos, sin lenguaje de anuncio",
+    "objetivo": "Pendiente de completar en Notion",
+    "evitar": []
   }
 ]

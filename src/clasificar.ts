@@ -81,7 +81,7 @@ ${REGLAS}
 - Prioridad Alta solo si hay fecha cercana, tendencia con caducidad o el mensaje lo pide.`;
 
 const sistemaTikTok = (fichas: string) => `Ordenas el banco de ideas de Tamara, dueña de la agencia Alquimia Digital y creadora de contenido (videojuegos en Kick, lifestyle, skincare, panoramas).
-Ella guarda TikToks de otras cuentas, frases sueltas y capturas. Tu trabajo: entender de qué trata cada video y decidir a qué cliente de la agencia le sirve, incluida ella misma como creadora.
+Ella guarda TikToks de otras cuentas, frases sueltas y capturas. Tu trabajo: entender de qué trata cada video y decidir a qué cliente de la agencia le sirve, incluidas las cuentas internas (marca personal, Medio Relato, la propia agencia).
 ${REGLAS}
 - Para entender el video usa, en este orden: la portada (imagen), la descripción y hashtags del link, y lo que ella escribió.
 - Si solo hay link y no llegaron datos del video, dilo en "de_que_trata" y no adivines el contenido.
