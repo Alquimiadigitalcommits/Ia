@@ -5,6 +5,8 @@ export interface Contacto {
   rol: Rol;
   /** Para rol "cliente": a qué cliente pertenecen sus ideas. */
   cliente?: string;
+  /** "tiktok" = sus mensajes van a la base personal "Ideas TikTok". Por defecto "agencia". */
+  destino?: "agencia" | "tiktok";
 }
 
 function requerida(nombre: string): string {
@@ -31,6 +33,8 @@ export function cargarConfig() {
     notion: {
       token: requerida("NOTION_TOKEN"),
       databaseId: requerida("NOTION_DATABASE_ID"),
+      /** Base "Ideas TikTok" (opcional). */
+      tiktokDatabaseId: process.env.NOTION_TIKTOK_DATABASE_ID ?? "",
     },
     contactos,
     clientes,
@@ -60,3 +64,19 @@ export const PILARES = [
   "Tendencia",
 ] as const;
 export const PRIORIDADES = ["Alta", "Media", "Baja"] as const;
+
+/** Base personal "Ideas TikTok". */
+export const NICHOS = ["Videojuegos", "Lifestyle", "Skincare", "Panoramas", "Otro"] as const;
+export const TIPOS_TIKTOK = [
+  "Tendencia / audio",
+  "Storytime",
+  "Tutorial / paso a paso",
+  "Review / opinión",
+  "GRWM",
+  "Día conmigo / vlog",
+  "Clip de stream / gameplay",
+  "Humor / sketch",
+  "Recomendación / panorama",
+  "Respuesta a comentario",
+  "Otro",
+] as const;

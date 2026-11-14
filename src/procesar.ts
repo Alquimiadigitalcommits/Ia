@@ -1,15 +1,19 @@
-import type { Config } from "./config.js";
+import type { Config, Contacto } from "./config.js";
 import { clasificarIdea } from "./clasificar.js";
 import { crearIdea, yaGuardado } from "./notion.js";
+import { extraerLinks, leerReferencias } from "./referencias.js";
+import { guardarIdeaTikTok } from "./tiktok.js";
 import { descargarMedia, enviarTexto, type MensajeEntrante } from "./whatsapp.js";
 
-const AYUDA = `Bot de ideas de Alquimia Digital
+const AYUDA_AGENCIA = `Bot de ideas de Alquimia Digital
 Mándame la idea como texto, link, foto con descripción o captura.
 - Para asignar cliente: escribe #NombreCliente en el mensaje.
 - Cada mensaje = una idea en Notion.
 - Escribe "ayuda" para ver esto de nuevo.`;
 
-const extraerLinks = (s: string) => s.match(/https?:\/\/[^\s<>"]+/g) ?? [];
+const AYUDA_TIKTOK = `Ideas TikTok
+Mándame frases, links de TikTok/YouTube o capturas. Cada mensaje queda como ficha en Notion con nicho, tipo, hook y estructura.
+- Para empezar con "agencia:" lo mando al Banco de ideas de Alquimia.`;
 
 function clienteDesdeHashtag(texto: string, clientes: string[]): string | undefined {
   const tags = texto.match(/#([\p{L}\p{N}_.-]+)/gu) ?? [];
@@ -21,6 +25,70 @@ function clienteDesdeHashtag(texto: string, clientes: string[]): string | undefi
   return undefined;
 }
 
+async function bajarImagen(cfg: Config, m: MensajeEntrante) {
+  if (m.tipo !== "image" || !m.mediaId) return undefined;
+  try {
+    return await descargarMedia(cfg, m.mediaId);
+  } catch (e) {
+    console.error(e);
+    return undefined;
+  }
+}
+
+async function guardarTikTok(cfg: Config, m: MensajeEntrante): Promise<string> {
+  const destino = { token: cfg.notion.token, databaseId: cfg.notion.tiktokDatabaseId };
+  const r = await guardarIdeaTikTok(destino, {
+    idOrigen: m.id,
+    fecha: m.fecha,
+    texto: m.texto,
+    origen: "WhatsApp",
+    imagen: await bajarImagen(cfg, m),
+    tipoAdjunto: m.tipo === "text" ? undefined : m.tipo,
+  });
+  if (!r) return ""; // reintento de Meta: ya estaba
+  return r.idea
+    ? [
+        `Guardada: "${r.idea.titulo}"`,
+        `${r.idea.nicho} · ${r.idea.tipo} · prioridad ${r.idea.prioridad}${r.idea.caduca ? " · caduca" : ""}`,
+        `Hook: ${r.idea.hook}`,
+        r.pagina.url,
+      ].join("\n")
+    : `Guardada sin clasificar.\n${r.pagina.url}`;
+}
+
+async function guardarAgencia(cfg: Config, m: MensajeEntrante, contacto: Contacto, texto: string): Promise<string> {
+  const destino = { token: cfg.notion.token, databaseId: cfg.notion.databaseId };
+  if (await yaGuardado(destino, m.id)) return "";
+
+  const clienteForzado =
+    contacto.rol === "cliente" ? contacto.cliente : clienteDesdeHashtag(texto, cfg.clientes);
+  const referencias = await leerReferencias(extraerLinks(texto));
+  const idea = await clasificarIdea(
+    { texto, remitente: contacto.nombre, clienteAsignado: clienteForzado, imagen: await bajarImagen(cfg, m), referencias },
+    cfg.clientes,
+  );
+  const pagina = await crearIdea(destino, {
+    whatsappId: m.id,
+    fecha: m.fecha,
+    remitente: contacto.nombre,
+    telefono: m.de,
+    fuente: contacto.rol === "cliente" ? "Cliente" : "Alquimia",
+    mensajeOriginal: texto,
+    referencias,
+    tipoAdjunto: m.tipo === "text" ? undefined : m.tipo,
+    clienteForzado,
+    idea,
+  });
+  return idea
+    ? [
+        `Guardada en Notion: "${idea.titulo}"`,
+        `Cliente: ${clienteForzado ?? idea.cliente}`,
+        `Formato: ${idea.formato} | ${idea.plataformas.join(", ") || "sin plataforma"}`,
+        pagina.url,
+      ].join("\n")
+    : `Guardé la idea en Notion sin clasificar (queda en estado "Sin clasificar").\n${pagina.url}`;
+}
+
 export async function procesarMensaje(cfg: Config, m: MensajeEntrante): Promise<void> {
   const contacto = cfg.contactos[m.de];
   if (!contacto) {
@@ -29,58 +97,25 @@ export async function procesarMensaje(cfg: Config, m: MensajeEntrante): Promise<
     return;
   }
 
+  const esTikTok = contacto.destino === "tiktok" && Boolean(cfg.notion.tiktokDatabaseId);
+
   if (/^\s*(ayuda|help|menu|menú)\s*$/i.test(m.texto)) {
-    await enviarTexto(cfg, m.de, AYUDA);
+    await enviarTexto(cfg, m.de, esTikTok ? AYUDA_TIKTOK : AYUDA_AGENCIA);
     return;
   }
-
-  if (await yaGuardado(cfg, m.id)) return; // reintento de Meta
-
   if (m.tipo === "otro") {
     await enviarTexto(cfg, m.de, "Ese tipo de mensaje todavía no lo guardo. Mándalo como texto, link o foto.");
     return;
   }
 
-  // Audio: la transcripción queda para la fase 2. Se guarda el registro igual.
-  let imagen: { datos: Buffer; mimeType: string } | undefined;
-  if (m.tipo === "image" && m.mediaId) {
-    try {
-      imagen = await descargarMedia(cfg, m.mediaId);
-    } catch (e) {
-      console.error(e);
-    }
-  }
+  // Quien usa la base TikTok puede mandar algo a la agencia empezando con "agencia:".
+  const prefijoAgencia = /^\s*agencia\s*:\s*/i;
+  const respuesta =
+    esTikTok && !prefijoAgencia.test(m.texto)
+      ? await guardarTikTok(cfg, m)
+      : await guardarAgencia(cfg, m, contacto, m.texto.replace(prefijoAgencia, ""));
 
-  const clienteForzado =
-    contacto.rol === "cliente" ? contacto.cliente : clienteDesdeHashtag(m.texto, cfg.clientes);
-
-  const idea = await clasificarIdea(
-    { texto: m.texto, remitente: contacto.nombre, clienteAsignado: clienteForzado, imagen },
-    cfg.clientes,
-  );
-
-  const pagina = await crearIdea(cfg, {
-    whatsappId: m.id,
-    fecha: m.fecha,
-    remitente: contacto.nombre,
-    telefono: m.de,
-    fuente: contacto.rol === "cliente" ? "Cliente" : "Alquimia",
-    mensajeOriginal: m.texto,
-    links: extraerLinks(m.texto),
-    tipoAdjunto: m.tipo === "text" ? undefined : m.tipo,
-    clienteForzado,
-    idea,
-  });
-
-  const respuesta = idea
-    ? [
-        `Guardada en Notion: "${idea.titulo}"`,
-        `Cliente: ${clienteForzado ?? idea.cliente}`,
-        `Formato: ${idea.formato} | ${idea.plataformas.join(", ") || "sin plataforma"}`,
-        pagina.url,
-      ].join("\n")
-    : `Guardé la idea en Notion sin clasificar (queda en estado "Sin clasificar").\n${pagina.url}`;
-  await enviarTexto(cfg, m.de, respuesta);
+  if (respuesta) await enviarTexto(cfg, m.de, respuesta);
 }
 
 /** Procesa todos los mensajes del webhook sin que un error corte a los demás. */

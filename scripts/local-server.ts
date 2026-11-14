@@ -5,7 +5,7 @@ import { cargarConfig } from "../src/config.js";
 import { procesarTodos } from "../src/procesar.js";
 import { extraerMensajes, firmaValida, verificarWebhook } from "../src/whatsapp.js";
 
-process.loadEnvFile?.(".env");
+try { process.loadEnvFile(".env"); } catch {} // .env es opcional
 const cfg = cargarConfig();
 const PUERTO = Number(process.env.PORT ?? 3000);
 

@@ -11,6 +11,7 @@
     "dev": "tsx watch scripts/local-server.ts",
     "start": "tsx scripts/local-server.ts",
     "probar": "tsx scripts/probar-clasificacion.ts",
+    "importar": "tsx scripts/importar-chat.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
