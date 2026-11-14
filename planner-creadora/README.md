@@ -16,4 +16,4 @@ PDF imprimible (Carta): habit tracker, content tracker y community tracker. 4 ni
 python3 generar.py            # las 8 versiones
 python3 generar.py gamer 3    # solo gamer trimestral
 ```
-Sin Node: abre `bitacora.html` en Chrome → Imprimir → Guardar como PDF (Carta, márgenes: ninguno, gráficos de fondo activados).
+Sin Node: abre el .html de `salidas/` en Chrome → Imprimir → Guardar como PDF (Carta, márgenes: ninguno, gráficos de fondo activados).
