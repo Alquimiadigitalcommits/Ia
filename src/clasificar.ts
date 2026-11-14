@@ -34,8 +34,24 @@ export function esquemaIdea(clientes: string[]) {
 }
 export type IdeaClasificada = z.infer<ReturnType<typeof esquemaIdea>>;
 
-export const esquemaTikTok = z.object({
+export function esquemaTikTok(clientes: string[]) {
+  return z.object({
   titulo: z.string().describe("Título corto, máximo 70 caracteres, sin emojis"),
+  de_que_trata: z
+    .string()
+    .describe(
+      "Qué muestra o cuenta el video de referencia según portada, descripción y hashtags. Si no hay referencia, qué se mostraría",
+    ),
+  clientes_sugeridos: z
+    .array(
+      z.object({
+        cliente: z.enum(clientes as [string, ...string[]]),
+        encaje: z.enum(["Alto", "Medio"]),
+        por_que: z.string().describe("Qué del video conecta con el rubro, público o temas del cliente. 1 frase"),
+        como_adaptarlo: z.string().describe("Versión concreta para ese cliente: qué se graba, con qué producto o lugar. 1-2 frases"),
+      }),
+    )
+    .describe("De 0 a 3 clientes, del mejor encaje al menor. Vacío si no le sirve a ninguno"),
   nicho: z.enum(NICHOS),
   tipo: z.enum(TIPOS_TIKTOK),
   resumen: z.string().describe("1 a 3 frases: qué se graba y qué se lleva quien lo ve"),
@@ -48,8 +64,9 @@ export const esquemaTikTok = z.object({
   prioridad: z.enum(PRIORIDADES),
   tags: z.array(z.string()).describe("2 a 5 etiquetas en minúscula"),
   es_referencia: z.boolean().describe("true si es principalmente un video de otra cuenta para inspirarse"),
-});
-export type IdeaTikTok = z.infer<typeof esquemaTikTok>;
+  });
+}
+export type IdeaTikTok = z.infer<ReturnType<typeof esquemaTikTok>>;
 
 // ─────────────────────────── Prompts ───────────────────────────
 
@@ -63,12 +80,18 @@ ${REGLAS}
 - Si el remitente ya tiene cliente asignado, usa ese cliente. Si el mensaje trae "#Nombre", ese es el cliente.
 - Prioridad Alta solo si hay fecha cercana, tendencia con caducidad o el mensaje lo pide.`;
 
-const SISTEMA_TIKTOK = `Ordenas el banco de ideas de TikTok de Tamara, creadora de contenido de videojuegos (streamea en Kick), lifestyle, skincare y panoramas.
-Ella se manda ideas a sí misma por WhatsApp: frases sueltas, links de TikToks de otras cuentas, capturas. Conviértelas en una ficha clara para grabar.
+const sistemaTikTok = (fichas: string) => `Ordenas el banco de ideas de Tamara, dueña de la agencia Alquimia Digital y creadora de contenido (videojuegos en Kick, lifestyle, skincare, panoramas).
+Ella guarda TikToks de otras cuentas, frases sueltas y capturas. Tu trabajo: entender de qué trata cada video y decidir a qué cliente de la agencia le sirve, incluida ella misma como creadora.
 ${REGLAS}
-- Si llega solo un link, la idea es "hacer mi versión" de esa referencia: describe qué tomar de ella.
+- Para entender el video usa, en este orden: la portada (imagen), la descripción y hashtags del link, y lo que ella escribió.
+- Si solo hay link y no llegaron datos del video, dilo en "de_que_trata" y no adivines el contenido.
+- Sugiere un cliente solo si el tema, el formato o el público del video conectan con su ficha. Mejor 1 cliente bien justificado que 3 forzados.
+- Respeta lo que cada cliente debe evitar.
 - Nicho "Otro" solo si no calza con ninguno.
-- Prioridad Alta si caduca pronto o ella marca urgencia ("ya", "hoy", "urgente", "!!").`;
+- Prioridad Alta si caduca pronto o ella marca urgencia ("ya", "hoy", "urgente", "!!").
+
+Fichas de clientes:
+${fichas}`;
 
 // ─────────────────────────── Llamada común ───────────────────────────
 
@@ -82,13 +105,21 @@ export interface Entrada {
 
 function armarContenido(e: Entrada, extra: string[]): Anthropic.Beta.BetaContentBlockParam[] {
   const contenido: Anthropic.Beta.BetaContentBlockParam[] = [];
-  if (e.imagen && /^image\/(jpeg|png|gif|webp)$/.test(e.imagen.mimeType)) {
+  const imagenes = [
+    ...(e.imagen ? [{ img: e.imagen, rotulo: "Imagen que mandó por WhatsApp:" }] : []),
+    ...(e.referencias ?? [])
+      .filter((r) => r.portada)
+      .map((r) => ({ img: r.portada!, rotulo: `Portada del video ${r.url}:` })),
+  ];
+  for (const { img, rotulo } of imagenes) {
+    if (!/^image\/(jpeg|png|gif|webp)$/.test(img.mimeType)) continue;
+    contenido.push({ type: "text", text: rotulo });
     contenido.push({
       type: "image",
       source: {
         type: "base64",
-        media_type: e.imagen.mimeType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-        data: e.imagen.datos.toString("base64"),
+        media_type: img.mimeType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+        data: img.datos.toString("base64"),
       },
     });
   }
@@ -155,6 +186,6 @@ export function clasificarIdea(e: Entrada, clientes: string[]) {
 }
 
 /** Ideas personales de TikTok. Devuelve null si falla (la idea igual se guarda). */
-export function clasificarIdeaTikTok(e: Entrada) {
-  return pedir(esquemaTikTok, SISTEMA_TIKTOK, armarContenido(e, [])) as Promise<IdeaTikTok | null>;
+export function clasificarIdeaTikTok(e: Entrada, clientes: string[], fichas: string) {
+  return pedir(esquemaTikTok(clientes), sistemaTikTok(fichas), armarContenido(e, [])) as Promise<IdeaTikTok | null>;
 }

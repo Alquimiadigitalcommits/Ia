@@ -58,9 +58,34 @@ Cliente / Tamara            Meta (WhatsApp Cloud API)      Netlify Function     
 2. **Historial del grupo:** se exporta una vez y se importa con un script.
 
 Qué hace con cada mensaje:
-- Si trae link de **TikTok o YouTube**, lee el caption y el autor del video (oEmbed público, sin claves). Instagram exige token de Meta: queda solo el link.
-- Claude arma la ficha: título, **nicho** (Videojuegos, Lifestyle, Skincare, Panoramas, Otro), **tipo** (tendencia/audio, storytime, tutorial, review, GRWM, vlog, clip de stream, humor, panorama, respuesta a comentario), hook, estructura de 3-5 pasos, audio/tendencia, si **caduca** y prioridad.
+- **Lee el video del link** (TikTok y YouTube, vía oEmbed público, sin claves): descripción, hashtags, autor y **portada**. Claude mira la portada como imagen.
+- **Decide de qué trata el video** y **a qué cliente le sirve** (0 a 3, con encaje Alto/Medio), comparando con la ficha de cada cliente en `clientes.json`. Para cada cliente explica por qué y cómo adaptarlo.
+- Arma la ficha: título, nicho, tipo, hook, estructura de 3-5 pasos, audio/tendencia, si **caduca** y prioridad.
+- Si no pudo leer el link (video privado, borrado o Instagram, que exige token de Meta), lo avisa en la respuesta y pide una captura.
 - Un mensaje que empiece con `agencia:` se va al Banco de ideas de la agencia.
+
+### Fichas de clientes (`clientes.json`)
+
+La calidad de la sugerencia depende de esta ficha. Por cliente:
+
+```json
+{
+  "nombre": "Nombre del cliente",
+  "rubro": "Qué vende o hace",
+  "publico": "Edad, género, intereses",
+  "temas": ["productos", "servicios", "temas que sí puede tocar"],
+  "tono": "Cómo habla la marca",
+  "evitar": ["lo que no puede aparecer"]
+}
+```
+
+### Límite actual: qué ve y qué no ve del video
+
+| Ve | No ve (todavía) |
+|---|---|
+| Portada, descripción, hashtags, autor | Lo que se dice en el audio, escenas después de la portada |
+
+Para ver el video completo hay que descargarlo, sacar fotogramas y transcribir el audio (ver "Fase 2: análisis del video completo").
 
 ### Importar el historial del grupo
 
@@ -94,6 +119,9 @@ Qué hace con cada mensaje:
 | Audio / tendencia | Texto | — |
 | Hook | Texto | — |
 | Resumen | Texto | — |
+| De qué trata | Texto | — |
+| Clientes sugeridos | Multi-select | Se crean solas |
+| Encaje top | Select | Alto, Medio, Ninguno |
 | Tags | Multi-select | — |
 | Link referencia | URL | — |
 | Autor referencia | Texto | — |
@@ -102,7 +130,16 @@ Qué hace con cada mensaje:
 | WhatsApp ID | Texto | (técnico, para no duplicar) |
 | Recibida | Fecha | — |
 
-Vistas sugeridas: tablero por **Estado**, tablero por **Nicho**, filtro "Caduca = sí y Estado = Nueva" ordenado por Recibida (las que hay que grabar primero).
+Vistas sugeridas: tablero por **Clientes sugeridos** (las ideas que le sirven a cada marca), tablero por **Estado**, tablero por **Nicho**, filtro "Caduca = sí y Estado = Nueva" ordenado por Recibida (las que hay que grabar primero).
+
+### Fase 2: análisis del video completo
+
+Para clasificar por lo que se dice y se muestra en todo el video:
+1. Descargar el video desde el link (yt-dlp) o recibirlo como archivo por WhatsApp.
+2. Sacar 6-8 fotogramas (ffmpeg) y enviarlos a Claude como imágenes.
+3. Transcribir el audio con un servicio de voz a texto (Claude no recibe audio).
+
+Necesita un servidor pequeño siempre encendido (Railway o Render, ~USD 5-7/mes), porque Netlify Functions no soporta ffmpeg ni procesos largos. Costo extra por video: ~USD 0,01-0,02.
 
 ## Base de Notion: "Banco de ideas"
 

@@ -7,6 +7,19 @@ export interface Referencia {
   titulo?: string;
   autor?: string;
   autorUrl?: string;
+  /** Portada del video, para que Claude vea de qué trata. */
+  portada?: { datos: Buffer; mimeType: string };
+  portadaUrl?: string;
+}
+
+const FORMATOS_IMAGEN = /^image\/(jpeg|png|gif|webp)$/;
+
+async function bajarPortada(url: string) {
+  const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+  const mimeType = (res.headers.get("content-type") ?? "").split(";")[0].trim();
+  if (!res.ok || !FORMATOS_IMAGEN.test(mimeType)) return undefined;
+  const datos = Buffer.from(await res.arrayBuffer());
+  return datos.length < 4_500_000 ? { datos, mimeType } : undefined;
 }
 
 export const extraerLinks = (s: string) =>
@@ -24,7 +37,12 @@ async function oembed(endpoint: string, url: string) {
     signal: AbortSignal.timeout(6000),
   });
   if (!res.ok) return null;
-  return (await res.json()) as { title?: string; author_name?: string; author_url?: string };
+  return (await res.json()) as {
+    title?: string;
+    author_name?: string;
+    author_url?: string;
+    thumbnail_url?: string;
+  };
 }
 
 export async function leerReferencia(url: string): Promise<Referencia> {
@@ -46,6 +64,10 @@ export async function leerReferencia(url: string): Promise<Referencia> {
       ref.titulo = datos.title?.slice(0, 500);
       ref.autor = datos.author_name;
       ref.autorUrl = datos.author_url;
+      if (datos.thumbnail_url) {
+        ref.portadaUrl = datos.thumbnail_url;
+        ref.portada = await bajarPortada(datos.thumbnail_url).catch(() => undefined);
+      }
     }
   } catch (e) {
     console.warn(`No se pudo leer ${url}:`, (e as Error).message);
@@ -53,4 +75,4 @@ export async function leerReferencia(url: string): Promise<Referencia> {
   return ref;
 }
 
-export const leerReferencias = (links: string[]) => Promise.all(links.slice(0, 5).map(leerReferencia));
+export const leerReferencias = (links: string[]) => Promise.all(links.slice(0, 3).map(leerReferencia));

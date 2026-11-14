@@ -1,3 +1,5 @@
+import { nombresClientes } from "./clientes.js";
+
 export type Rol = "equipo" | "cliente";
 
 export interface Contacto {
@@ -17,10 +19,8 @@ function requerida(nombre: string): string {
 
 export function cargarConfig() {
   const contactos = JSON.parse(process.env.CONTACTOS_JSON ?? "{}") as Record<string, Contacto>;
-  const clientes = (process.env.CLIENTES ?? "")
-    .split(",")
-    .map((c) => c.trim())
-    .filter(Boolean);
+  // Los clientes salen de clientes.json (con su ficha).
+  const clientes = nombresClientes();
 
   return {
     whatsapp: {

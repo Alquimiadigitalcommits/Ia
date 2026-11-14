@@ -7,7 +7,15 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ],
+    "resolveJsonModule": true
   },
-  "include": ["src", "scripts", "netlify"]
+  "include": [
+    "src",
+    "scripts",
+    "netlify",
+    "clientes.json"
+  ]
 }

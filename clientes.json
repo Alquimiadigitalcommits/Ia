@@ -1,0 +1,18 @@
+[
+  {
+    "nombre": "Tamara (creadora)",
+    "rubro": "Creadora de contenido: videojuegos (Kick), lifestyle, skincare, panoramas",
+    "publico": "Mujeres y hombres 18-30, gamers y público lifestyle",
+    "temas": ["streams", "juegos nuevos", "setup gamer", "rutina skincare", "panoramas", "día conmigo"],
+    "tono": "Cercano, humor, primera persona",
+    "evitar": []
+  },
+  {
+    "nombre": "Marca X",
+    "rubro": "EJEMPLO — reemplazar: marca de skincare",
+    "publico": "Mujeres 20-35",
+    "temas": ["serum", "protector solar", "rutina de noche"],
+    "tono": "Educativo, sin promesas médicas",
+    "evitar": ["comparar con otras marcas"]
+  }
+]

@@ -46,14 +46,21 @@ async function guardarTikTok(cfg: Config, m: MensajeEntrante): Promise<string> {
     tipoAdjunto: m.tipo === "text" ? undefined : m.tipo,
   });
   if (!r) return ""; // reintento de Meta: ya estaba
-  return r.idea
-    ? [
-        `Guardada: "${r.idea.titulo}"`,
-        `${r.idea.nicho} · ${r.idea.tipo} · prioridad ${r.idea.prioridad}${r.idea.caduca ? " · caduca" : ""}`,
-        `Hook: ${r.idea.hook}`,
-        r.pagina.url,
-      ].join("\n")
-    : `Guardada sin clasificar.\n${r.pagina.url}`;
+  if (!r.idea) return `Guardada sin clasificar.\n${r.pagina.url}`;
+  const i = r.idea;
+  const sinDatos = r.referencias.length > 0 && r.referencias.every((x) => !x.titulo && !x.portada);
+  return [
+    `"${i.titulo}"`,
+    `De qué trata: ${i.de_que_trata}`,
+    i.clientes_sugeridos.length
+      ? `Le sirve a:\n${i.clientes_sugeridos.map((c) => `• ${c.cliente} (${c.encaje}): ${c.como_adaptarlo}`).join("\n")}`
+      : "No calza claro con ningún cliente actual.",
+    `${i.nicho} · ${i.tipo}${i.caduca ? " · caduca" : ""}`,
+    sinDatos ? "Ojo: no pude leer el video del link. Mándame una captura y lo reviso mejor." : "",
+    r.pagina.url,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 async function guardarAgencia(cfg: Config, m: MensajeEntrante, contacto: Contacto, texto: string): Promise<string> {

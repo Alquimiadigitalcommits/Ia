@@ -140,6 +140,9 @@ export async function crearIdeaTikTok(d: Destino, n: NuevaIdeaTikTok): Promise<{
   if (ref?.autor) properties["Autor referencia"] = texto(ref.autor);
   if (i) {
     Object.assign(properties, {
+      "De qué trata": texto(i.de_que_trata),
+      "Clientes sugeridos": multi(i.clientes_sugeridos.map((c) => c.cliente)),
+      "Encaje top": select(i.clientes_sugeridos[0]?.encaje ?? "Ninguno"),
       Nicho: select(i.nicho),
       Tipo: select(i.tipo),
       Prioridad: select(i.prioridad),
@@ -158,6 +161,21 @@ export async function crearIdeaTikTok(d: Destino, n: NuevaIdeaTikTok): Promise<{
   if (n.tipoAdjunto) children.push(bloque("paragraph", texto(`Adjunto en WhatsApp: ${n.tipoAdjunto}`)));
   if (n.referencias.length) {
     children.push(bloque("heading_3", texto("Referencias")), ...bloquesReferencias(n.referencias));
+  }
+  if (i) {
+    children.push(bloque("heading_3", texto("De qué trata")), bloque("paragraph", texto(i.de_que_trata)));
+    children.push(bloque("heading_3", texto("A quién le sirve")));
+    if (!i.clientes_sugeridos.length) {
+      children.push(bloque("paragraph", texto("No calza claro con ningún cliente actual.")));
+    }
+    for (const c of i.clientes_sugeridos) {
+      children.push(
+        bloque("callout", {
+          ...texto(`${c.cliente} · encaje ${c.encaje}\nPor qué: ${c.por_que}\nCómo adaptarlo: ${c.como_adaptarlo}`),
+          icon: { emoji: c.encaje === "Alto" ? "🟢" : "🟡" },
+        }),
+      );
+    }
   }
   if (i?.estructura.length) {
     children.push(

@@ -1,10 +1,20 @@
-// Prueba solo la parte de Claude, sin WhatsApp ni Notion:
-//   npm run probar -- "idea: tiktok mostrando la rutina de noche con el serum nuevo #MarcaX"
-import { clasificarIdea } from "../src/clasificar.js";
+// Prueba solo la parte de Claude (y la lectura del link), sin WhatsApp ni Notion:
+//   npm run probar -- "reel rutina de noche con el serum nuevo #MarcaX"
+//   npm run probar -- --tiktok "https://www.tiktok.com/@cuenta/video/123 hacer mi versión"
+import { clasificarIdea, clasificarIdeaTikTok } from "../src/clasificar.js";
+import { fichasComoTexto, nombresClientes } from "../src/clientes.js";
+import { extraerLinks, leerReferencias } from "../src/referencias.js";
 
 try { process.loadEnvFile(".env"); } catch {} // .env es opcional
-const texto = process.argv.slice(2).join(" ") || "Hacer un stream de Kick jugando el nuevo juego de terror con la comunidad el viernes";
-const clientes = (process.env.CLIENTES ?? "").split(",").map((c) => c.trim()).filter(Boolean);
+const args = process.argv.slice(2);
+const tiktok = args.includes("--tiktok");
+const texto = args.filter((a) => a !== "--tiktok").join(" ") || "Stream de Kick jugando el nuevo juego de terror el viernes";
 
-const idea = await clasificarIdea({ texto, remitente: "Tamara" }, clientes);
+const referencias = await leerReferencias(extraerLinks(texto));
+for (const r of referencias) {
+  console.log(`Link ${r.url}\n  autor: ${r.autor ?? "?"}\n  descripción: ${r.titulo ?? "(no se pudo leer)"}\n  portada: ${r.portada ? "sí" : "no"}`);
+}
+const idea = tiktok
+  ? await clasificarIdeaTikTok({ texto, remitente: "Tamara", referencias }, nombresClientes(), fichasComoTexto())
+  : await clasificarIdea({ texto, remitente: "Tamara", referencias }, nombresClientes());
 console.log(JSON.stringify(idea, null, 2));
