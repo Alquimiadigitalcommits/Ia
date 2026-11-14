@@ -1,6 +1,6 @@
 [build]
   command = "npm run typecheck"
-  publish = "docs"
+  publish = "web"
 
 [functions]
   node_bundler = "esbuild"

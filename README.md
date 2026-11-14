@@ -1,4 +1,33 @@
-# Bot de ideas: WhatsApp → Notion
+# Alquimia OS: WhatsApp + Notion + Drive
+
+Sistema personal y de la agencia. Partes:
+
+| Parte | Dónde vive | Estado |
+|---|---|---|
+| Ideas de contenido por WhatsApp | Notion | Hecho (v0.3) |
+| Dashboard "Mi día" (agua, humor, movimiento, lectura, medicamentos, ciclo, fechas, proyectos) | Web en Netlify, datos en Notion | Hecho (v0.1) |
+| Alarmas del día para Android | `/api/alarmas-hoy` + MacroDroid/Tasker | Endpoint hecho, falta configurar el teléfono |
+| Finanzas personales | Notion: base "Finanzas personales" | Base creada, falta conectarla al bot y al dashboard |
+| Finanzas de negocios, inventario, proveedores | Drive: planilla Sistema_Administrativo_Emprendimientos | Falta acceso del bot a Google Sheets |
+| Asistente de WhatsApp que entiende todo ("gasté 5 lucas en uber", "tomé 2 vasos") | Netlify + Claude | Siguiente etapa |
+
+## Dashboard "Mi día"
+
+- Diseño: fondo crema, menú negro, tarjetas en amarillo (agua), rosado (humor), verde (movimiento), azul (lectura), lila (ciclo). Calendario y línea de tiempo del día a la derecha. En celular: línea de tiempo arriba, tarjetas en columna y menú abajo.
+- Se instala en Android como app (Chrome → menú → "Agregar a pantalla principal").
+- Protegido con `DASHBOARD_CLAVE`: tiene datos de salud.
+- Registro rápido desde el dashboard: +1 vaso de agua, humor del día, marcar kine.
+- Ver con datos de ejemplo: `https://TU-SITIO.netlify.app/?demo`.
+- Bases en Notion (página privada "Mi día"): Registro diario, Medicamentos, Plan de ejercicio y kine, Fechas importantes, Ciclo, Lecturas, Finanzas personales.
+
+### Alarmas en Android (MacroDroid)
+
+1. Instalar MacroDroid (gratis hasta 5 macros).
+2. Macro nueva: disparador **Hora del día 06:00** → acción **Solicitud HTTP GET** a `https://TU-SITIO.netlify.app/api/alarmas-hoy?clave=TU_CLAVE&formato=texto` guardando la respuesta en una variable.
+3. Acción **Repetir para cada línea** de la variable → separar por `|` → acción **Crear alarma** con hora y etiqueta.
+
+El endpoint devuelve una línea por alarma: `08:00|Vitamina D · 1 cápsula`. Salen de Medicamentos (horarios), Plan de ejercicio y kine (hora) y Fechas importantes con hora.
+
 
 Dos bases, un mismo bot:
 
