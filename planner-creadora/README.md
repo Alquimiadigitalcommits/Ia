@@ -17,3 +17,14 @@ python3 generar.py            # las 8 versiones
 python3 generar.py gamer 3    # solo gamer trimestral
 ```
 Sin Node: abre el .html de `salidas/` en Chrome → Imprimir → Guardar como PDF (Carta, márgenes: ninguno, gráficos de fondo activados).
+
+## Versión Google Sheets (`planilla/`)
+Plantilla que se llena sola: Configuración (nicho, plataformas, hábitos, pilares, mes, metas) alimenta todas las pestañas.
+Diario → tablero de Hábitos; Ideas → Calendario; Métricas, Seguidores, Registro y Colaboraciones → Cierre del mes y Año (con trimestres).
+
+```bash
+cd planilla
+python3 generar_planilla.py        # Bitacora-de-Creadora-Sheets.xlsx (vacía, para vender)
+python3 generar_planilla.py demo   # con datos de EJEMPLO
+```
+Sube el .xlsx a Google Drive (se convierte a Google Sheets). Para vender: comparte el enlace cambiando `/edit` por `/copy`.
