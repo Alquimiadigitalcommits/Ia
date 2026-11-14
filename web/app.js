@@ -86,6 +86,18 @@ function datosDemo() {
       diasPeriodo: [0, 1, 2, 3, 4].map((i) => sumarDias(inicioCiclo, i)),
       diasProximo: [0, 1, 2, 3, 4].map((i) => sumarDias(proximo, i)),
     },
+    finanzas: {
+      personal: { mes: hoy.slice(0, 7), gastos: 412500, ingresos: 950000, ahorro: 100000, balance: 437500, movimientos: 38,
+        porCategoria: [{ categoria: "Arriendo", monto: 250000 }, { categoria: "Supermercado", monto: 68400 }, { categoria: "Transporte", monto: 41200 }, { categoria: "Comida", monto: 32900 }, { categoria: "Suscripciones", monto: 20000 }] },
+      negocios: { mes: hoy.slice(0, 7), negocios: [
+        { negocio: "Detalles", ventas: 186000, gastos: 12000, compras: 54000, resultado: 120000, unidades: 23 },
+        { negocio: "Ropa", ventas: 98000, gastos: 5000, compras: 60000, resultado: 33000, unidades: 7 },
+        { negocio: "Etsy", ventas: 41000, gastos: 6200, compras: 9000, resultado: 25800, unidades: 3 },
+        { negocio: "Alquimia Digital", ventas: 450000, gastos: 35000, compras: 0, resultado: 415000, unidades: 2 },
+        { negocio: "Calzado", ventas: 0, gastos: 0, compras: 0, resultado: 0, unidades: 0 },
+        { negocio: "Dropshipping", ventas: 0, gastos: 8000, compras: 0, resultado: -8000, unidades: 0 },
+      ] },
+    },
     lecturas: [{ libro: "Hábitos atómicos", autor: "James Clear", pagina: 142, total: 328 }],
     proyectos: [
       { nombre: "Lanzamiento YouTube Plasok", estado: "En curso" },
@@ -150,7 +162,7 @@ function pintar(d) {
   $("#fecha-hoy").textContent = fechaLarga(d.hoy, { weekday: "long", day: "numeric", month: "long" });
 
   pintarAgua(d); pintarHumor(d); pintarMovimiento(d); pintarLectura(d);
-  pintarMedicamentos(d); pintarCiclo(d); pintarFechas(d); pintarProyectos(d);
+  pintarFinanzas(d); pintarMedicamentos(d); pintarCiclo(d); pintarFechas(d); pintarProyectos(d);
   pintarCalendario(d); pintarLineaTiempo(d);
 }
 
@@ -233,6 +245,37 @@ function pintarLectura(d) {
     : "<p class='sub'>Agrega un libro con estado Leyendo en Notion.</p>";
 }
 
+const clp = (n) => (n < 0 ? "-$" : "$") + Math.abs(Math.round(n)).toLocaleString("es-CL");
+
+function pintarFinanzas(d) {
+  const p = d.finanzas?.personal;
+  const n = d.finanzas?.negocios;
+  $("#fin-mes").textContent = p?.mes ? fechaLarga(`${p.mes}-01`, { month: "long", year: "numeric" }) : "";
+  if (!p) {
+    $("#fin-personal").innerHTML = '<p class="pista-texto">Falta NOTION_DB_FINANZAS_PERSONALES en la configuración.</p>';
+  } else if (p.error) {
+    $("#fin-personal").innerHTML = `<p class="pista-texto">No se pudo leer: ${esc(p.error)}</p>`;
+  } else {
+    const max = Math.max(1, ...p.porCategoria.map((c) => c.monto));
+    $("#fin-personal").innerHTML = `
+      <div class="cifras">${cifra(clp(p.gastos), "gastos del mes", true)}${cifra(clp(p.ingresos), "ingresos")}${cifra(clp(p.balance), "balance")}</div>
+      <div class="barras-h">${p.porCategoria.slice(0, 5).map((c) => `<div class="barra-h"><span>${esc(c.categoria)}</span><span class="pista"><i style="width:${(c.monto / max) * 100}%"></i></span><b>${clp(c.monto)}</b></div>`).join("") || '<p class="pista-texto">Sin gastos este mes.</p>'}</div>`;
+  }
+  if (!n) {
+    $("#fin-negocios").innerHTML = '<p class="pista-texto">La planilla de negocios no está conectada. <a href="configurar.html">Conectarla</a>.</p>';
+  } else if (n.error) {
+    $("#fin-negocios").innerHTML = `<p class="pista-texto">No se pudo leer la planilla: ${esc(n.error)}</p>`;
+  } else {
+    const filas = n.negocios.filter((x) => x.ventas || x.gastos || x.compras);
+    const tot = filas.reduce((a, x) => ({ v: a.v + x.ventas, g: a.g + x.gastos + x.compras, r: a.r + x.resultado }), { v: 0, g: 0, r: 0 });
+    $("#fin-negocios").innerHTML = filas.length
+      ? `<table class="tabla-negocios"><thead><tr><th>Negocio</th><th>Ventas</th><th>Costos</th><th>Resultado</th></tr></thead><tbody>
+        ${filas.map((x) => `<tr><td>${esc(x.negocio)}</td><td>${clp(x.ventas)}</td><td>${clp(x.gastos + x.compras)}</td><td class="${x.resultado < 0 ? "neg" : ""}">${clp(x.resultado)}</td></tr>`).join("")}
+        <tr class="total"><td>Total</td><td>${clp(tot.v)}</td><td>${clp(tot.g)}</td><td class="${tot.r < 0 ? "neg" : ""}">${clp(tot.r)}</td></tr></tbody></table>`
+      : '<p class="pista-texto">Sin movimientos este mes.</p>';
+  }
+}
+
 function pintarMedicamentos(d) {
   const ahora = new Date().toTimeString().slice(0, 5);
   $("#medicamentos").innerHTML = d.medicamentosHoy.length
@@ -276,7 +319,7 @@ function pintarProyectos(d) {
     <div class="tarjeta-cab"><b>${lista.length} proyecto${lista.length === 1 ? "" : "s"}</b></div>
     <div class="etiquetas">${[...new Set(lista.map((p) => p.estado).filter(Boolean))].map((e) => `<span class="etiqueta">${esc(e)}</span>`).join("")}</div>
     <dl>${lista.slice(0, 6).map((p) => `<dt>${esc(p.estado || "—")}</dt><dd>${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.nombre)}</a>` : esc(p.nombre)}</dd>`).join("") || "<dd>Conecta la base Proyectos (NOTION_DB_PROYECTOS).</dd>"}</dl>
-    <p class="nota sub">Negocios (ventas, gastos, stock): se conecta con la planilla Sistema Administrativo en la siguiente etapa.</p>`;
+`;
 }
 
 function pintarCalendario(d) {

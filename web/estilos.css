@@ -247,3 +247,19 @@ dialog::backdrop { background: rgba(20, 20, 20, 0.55); }
   .principal { display: contents; }
   .saludo { order: -2; }
 }
+
+/* ─────────── Finanzas ─────────── */
+.finanzas { min-height: 0; }
+.barras-h { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.barra-h { display: grid; grid-template-columns: minmax(84px, 30%) 1fr auto; gap: 10px; align-items: center; }
+.barra-h .pista { height: 10px; background: rgba(20, 20, 20, 0.12); border-radius: 999px; overflow: hidden; }
+.barra-h .pista i { display: block; height: 100%; background: var(--tinta); border-radius: inherit; }
+.barra-h b { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabla-negocios { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tabla-negocios th { text-align: right; font-size: 11px; font-weight: 600; color: rgba(20, 20, 20, 0.6); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 0 6px; }
+.tabla-negocios th:first-child, .tabla-negocios td:first-child { text-align: left; }
+.tabla-negocios td { text-align: right; padding: 7px 0; border-top: 1px solid rgba(20, 20, 20, 0.12); }
+.tabla-negocios .neg { color: #7a1f1f; }
+.tabla-negocios tr.total td { font-weight: 700; border-top: 1.5px solid var(--tinta); }
+.pista-texto { font-size: 13px; margin: 0; color: rgba(20, 20, 20, 0.7); }
+.pista-texto a { color: inherit; font-weight: 600; }

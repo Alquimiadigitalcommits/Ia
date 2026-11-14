@@ -23,7 +23,7 @@
       <a class="menu-item activo" href="#inicio" data-icono="inicio">Inicio</a>
       <a class="menu-item" href="#salud" data-icono="corazon">Salud</a>
       <a class="menu-item" href="#agenda" data-icono="calendario">Agenda</a>
-      <a class="menu-item" href="#negocios" data-icono="tienda">Negocios</a>
+      <a class="menu-item" href="#finanzas" data-icono="tienda">Finanzas</a>
       <p class="menu-titulo">Herramientas</p>
       <a class="menu-item" href="https://www.notion.so" target="_blank" rel="noopener" data-icono="nota">Abrir Notion</a>
       <button class="menu-item" id="salir" type="button" data-icono="salir">Cerrar sesión</button>
@@ -78,6 +78,17 @@
         </article>
       </section>
 
+      <section class="fila-doble" id="finanzas" aria-label="Finanzas">
+        <div>
+          <div class="seccion-cab"><h2>Finanzas personales</h2><span class="sub" id="fin-mes"></span></div>
+          <article class="tarjeta amarilla finanzas" id="fin-personal"></article>
+        </div>
+        <div>
+          <div class="seccion-cab"><h2>Negocios</h2><span class="sub">este mes</span></div>
+          <article class="tarjeta verde finanzas" id="fin-negocios"></article>
+        </div>
+      </section>
+
       <section class="fila-doble">
         <div>
           <div class="seccion-cab"><h2>Medicamentos de hoy</h2></div>
@@ -95,7 +106,7 @@
           <ul class="filas" id="fechas"></ul>
         </div>
         <div>
-          <div class="seccion-cab"><h2>Proyectos y negocios</h2></div>
+          <div class="seccion-cab"><h2>Proyectos</h2></div>
           <article class="tarjeta rosada detalle" id="proyectos"></article>
         </div>
       </section>

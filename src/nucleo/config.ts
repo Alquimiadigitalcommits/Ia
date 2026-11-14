@@ -1,6 +1,11 @@
 import { nombresClientes } from "./clientes.js";
 
-export type Rol = "equipo" | "cliente";
+/**
+ * admin: acceso total (finanzas, salud, negocios, ideas). Solo la dueña.
+ * equipo: solo guarda ideas (puede asignar cliente con #Nombre).
+ * cliente: solo guarda ideas, que van directo a su ficha.
+ */
+export type Rol = "admin" | "equipo" | "cliente";
 
 export interface Contacto {
   nombre: string;

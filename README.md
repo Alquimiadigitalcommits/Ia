@@ -4,12 +4,27 @@ Sistema personal y de la agencia. Partes:
 
 | Parte | Dónde vive | Estado |
 |---|---|---|
-| Ideas de contenido por WhatsApp | Notion: "Ideas y referencias" (base existente) | Hecho (v0.4, paso 1) |
-| Dashboard "Mi día" (agua, humor, movimiento, lectura, medicamentos, ciclo, fechas, proyectos) | Web en Netlify, datos en Notion | Hecho (v0.1) |
-| Alarmas del día para Android | `/api/alarmas-hoy` + MacroDroid/Tasker | Endpoint hecho, falta configurar el teléfono |
-| Finanzas personales | Notion: base "Finanzas personales" | Base creada, falta conectarla al bot y al dashboard |
-| Finanzas de negocios, inventario, proveedores | Drive: planilla Sistema_Administrativo_Emprendimientos | Falta acceso del bot a Google Sheets |
-| Asistente de WhatsApp que entiende todo ("gasté 5 lucas en uber", "tomé 2 vasos") | Netlify + Claude | Siguiente etapa |
+| Asistente de WhatsApp (11 herramientas, roles admin / equipo / cliente) | Netlify + Claude | Hecho, sin probar con claves reales |
+| Ideas de contenido | Notion: "Ideas y referencias" | Hecho |
+| Dashboard "Mi día" con finanzas | Web en Netlify, datos en Notion y Drive | Hecho |
+| Finanzas personales | Notion: "Finanzas personales" | Hecho |
+| Finanzas de negocios, compras, proveedores, stock | Drive: Sistema_Administrativo_Emprendimientos | Hecho (falta subir la credencial de Google) |
+| Recordatorios por WhatsApp gratis (ventana de 24 h) | Función programada cada 15 min | Hecho |
+| Alarmas en Android | `/api/alarmas-hoy` + MacroDroid | Endpoint hecho, falta configurar el teléfono |
+
+Detalle y auditoría de cada etapa: `docs/paso-1-bitacora.md` y `docs/pasos-2-a-5-bitacora.md`.
+
+## Puesta en marcha: lo que tienes que hacer tú
+
+| # | Qué | Dónde | Tiempo |
+|---|---|---|---|
+| 1 | Crear la integración de Notion y conectarla a "Agencia Digital \| Centro de Operaciones" y a "Mi día" | notion.so/my-integrations | 5 min |
+| 2 | Crear la app de WhatsApp en Meta, número y token permanente | developers.facebook.com (pasos abajo) | 30-60 min |
+| 3 | Crear la API key de Claude | platform.claude.com | 2 min |
+| 4 | Cargar las variables de `.env.example` en Netlify → Site configuration → Environment variables | Netlify | 10 min |
+| 5 | Cuenta de servicio de Google: Google Cloud → crear proyecto → activar "Google Sheets API" → crear cuenta de servicio → crear clave JSON. Subirla en `/configurar.html` y compartir la planilla con el correo que aparece | console.cloud.google.com | 15 min |
+| 6 | Poner tu número con `"rol":"admin"` en `CONTACTOS_JSON` | Netlify | 1 min |
+| 7 | MacroDroid para alarmas (opcional) | Celular | 10 min |
 
 ## Dashboard "Mi día"
 
@@ -127,12 +142,14 @@ ngrok http 3000          # usar https://xxxx.ngrok.app/webhook en Meta
 
 ```
 src/
-├─ conectores/   Cómo hablar con servicios externos: notion (con reintentos) · whatsapp · referencias
+├─ conectores/   Servicios externos: notion · sheets · whatsapp · referencias (todos con reintentos)
 ├─ ideas/        Ideas de contenido: clasificar (Claude) · guardar (Notion) · chat-export
-├─ personal/     Dashboard Mi día: lectura de bases, ciclo, fechas, registro rápido
+├─ asistente/    Claude + herramientas (tool runner): qué hacer con cada mensaje
+├─ negocios/     Ventas, gastos, compras, proveedores y stock en la planilla de Drive
+├─ personal/     Dashboard, finanzas personales, agenda y ciclo
 ├─ nucleo/       Base compartida: config · clientes · acceso (clave) · idempotencia
-└─ canales/      Entrada de mensajes: whatsapp
-netlify/functions/   Endpoints: /webhook · /api/resumen · /api/registrar · /api/alarmas-hoy
+└─ canales/      Entrada y salida: whatsapp (roles) · recordatorios (ventana gratuita)
+netlify/functions/   /webhook · /api/resumen · /api/registrar · /api/alarmas-hoy · /api/configurar-google · recordatorios (cada 15 min)
 web/                 Dashboard (HTML, CSS y JS sin dependencias)
 tests/               Pruebas automáticas (Vitest)
 scripts/             Servidor local, probar clasificación, importar chat
@@ -144,6 +161,6 @@ Regla de capas: `nucleo/` lo puede usar todo. `conectores/` usa solo `nucleo/`, 
 ## Pruebas y auditoría
 
 ```bash
-npm test          # 33 pruebas: Notion (reintentos, paginación), duplicados, ideas, WhatsApp, dashboard, chat
+npm test          # 60 pruebas: Notion, Sheets, duplicados, ideas, asistente y permisos, negocios, recordatorios, WhatsApp, dashboard, chat
 npm run revisar   # compilación + pruebas. Netlify lo corre antes de publicar: si algo falla, no se publica.
 ```

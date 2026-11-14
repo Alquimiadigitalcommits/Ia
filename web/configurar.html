@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configurar planilla</title>
+  <link rel="stylesheet" href="estilos.css">
+  <style>
+    main { max-width: 520px; margin: 0 auto; padding: 32px 16px; display: flex; flex-direction: column; gap: 14px; }
+    input { font: inherit; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--linea); background: #fff; }
+    .ok { background: var(--verde); padding: 14px; border-radius: 16px; }
+    ol { padding-left: 20px; margin: 0; } li { margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Conectar la planilla de negocios</h1>
+    <p class="sub">Sube una vez el archivo .json de la cuenta de servicio de Google. La llave queda guardada en Netlify y no se vuelve a mostrar.</p>
+    <label for="clave">Clave del dashboard</label>
+    <input id="clave" type="password" autocomplete="current-password">
+    <label for="archivo">Archivo .json de Google</label>
+    <input id="archivo" type="file" accept="application/json,.json">
+    <button class="boton" id="subir" type="button">Subir</button>
+    <p class="error" id="error" hidden></p>
+    <div class="ok" id="ok" hidden></div>
+  </main>
+  <script>
+    document.getElementById("subir").addEventListener("click", async () => {
+      const err = document.getElementById("error"), ok = document.getElementById("ok");
+      err.hidden = true; ok.hidden = true;
+      const f = document.getElementById("archivo").files[0];
+      if (!f) { err.textContent = "Elige el archivo .json."; err.hidden = false; return; }
+      const res = await fetch("/api/configurar-google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-clave": document.getElementById("clave").value },
+        body: await f.text(),
+      }).catch(() => null);
+      const datos = res ? await res.json().catch(() => ({})) : { error: "Sin conexión" };
+      if (!res || !res.ok) { err.textContent = datos.error || "No se pudo subir."; err.hidden = false; return; }
+      ok.innerHTML = "Listo. Último paso: abre la planilla <b>Sistema_Administrativo_Emprendimientos</b> → Compartir → agrega este correo como <b>Editor</b>:<br><code></code>";
+      ok.querySelector("code").textContent = datos.compartirCon;
+      ok.hidden = false;
+    });
+  </script>
+</body>
+</html>
