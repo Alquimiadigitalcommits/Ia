@@ -26,6 +26,17 @@ Detalle y auditoría de cada etapa: `docs/paso-1-bitacora.md` y `docs/pasos-2-a-
 | 6 | Poner tu número con `"rol":"admin"` en `CONTACTOS_JSON` | Netlify | 1 min |
 | 7 | MacroDroid para alarmas (opcional) | Celular | 10 min |
 
+### Publicar en Netlify
+
+El sitio **alquimia-mi-dia** ya está creado en tu equipo de Netlify, pero todavía sin contenido publicado.
+
+1. app.netlify.com → **alquimia-mi-dia** → **Site configuration** → **Build & deploy** → **Link repository** → GitHub → `alquimiadigitalcommits/ia`.
+2. Rama de producción: `claude/whatsapp-notion-content-ideas-k7et4z` (o `main`, si la unes primero).
+3. Netlify lee `netlify.toml`: corre `npm run revisar` (compilación + 60 pruebas) y publica `web/`. Si una prueba falla, no se publica.
+4. Desde ahí, cada cambio que se sube a GitHub se publica solo.
+
+**Ojo con el acceso:** el sitio se creó con **inicio de sesión de equipo de Netlify** para todo el sitio. Eso protege el dashboard, pero también bloquea a WhatsApp (Meta no puede iniciar sesión). Antes de conectar WhatsApp: **Site configuration → Access & security → Visitor access** → desactivar el inicio de sesión de equipo. El dashboard sigue protegido con `DASHBOARD_CLAVE`, y el webhook con la firma de Meta.
+
 ## Dashboard "Mi día"
 
 - Diseño: fondo crema, menú negro, tarjetas en amarillo (agua), rosado (humor), verde (movimiento), azul (lectura), lila (ciclo). Calendario y línea de tiempo del día a la derecha. En celular: línea de tiempo arriba, tarjetas en columna y menú abajo.
