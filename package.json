@@ -1,0 +1,26 @@
+{
+  "name": "alquimia-ideas-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bot de WhatsApp que guarda ideas de contenido en Notion, clasificadas con Claude",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch scripts/local-server.ts",
+    "start": "tsx scripts/local-server.ts",
+    "probar": "tsx scripts/probar-clasificacion.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^6.1.1",
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

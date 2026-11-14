@@ -1,0 +1,12 @@
+[build]
+  command = "npm run typecheck"
+  publish = "docs"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Meta llama a https://TU-SITIO.netlify.app/webhook
+[[redirects]]
+  from = "/webhook"
+  to = "/.netlify/functions/whatsapp"
+  status = 200
