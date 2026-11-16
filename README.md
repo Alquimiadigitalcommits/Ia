@@ -1,4 +1,15 @@
-# Alquimia OS: WhatsApp + Notion + Drive
+# Alquimia Mi Día
+
+Plataforma de organización personal y laboral: app React (PWA, lista para Android), API en Netlify, datos en Supabase (Postgres con RLS), asistente por WhatsApp e integraciones con Notion y Google Sheets.
+
+- Arquitectura y auditoría: `docs/fase-0-auditoria-y-arquitectura.md`
+- Fase 1 (base): `docs/fase-1-bitacora.md`
+- Probar en tu computador sin Supabase: `npm install && npm run local` → http://localhost:8787
+- Pruebas: `npm run revisar` (TypeScript + 109 pruebas)
+
+---
+
+## Sistema anterior (sigue funcionando): WhatsApp + Notion + Drive
 
 Sistema personal y de la agencia. Partes:
 

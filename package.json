@@ -12,9 +12,13 @@
     "start": "tsx scripts/local-server.ts",
     "probar": "tsx scripts/probar-clasificacion.ts",
     "importar": "tsx scripts/importar-chat.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p app",
     "test": "vitest run",
-    "revisar": "tsc --noEmit && vitest run"
+    "revisar": "tsc --noEmit && tsc --noEmit -p app && vitest run",
+    "dev:app": "vite",
+    "build": "vite build",
+    "migrar": "tsx scripts/migrar.ts",
+    "local": "tsx scripts/servidor-local.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

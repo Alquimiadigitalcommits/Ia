@@ -107,7 +107,8 @@ export function widgetsVisibles(widgets: ConfigWidget[], modulos: ConfigModulo[]
     if (!def) return false;
     if (!def.modulo) return true;
     const mod = moduloPorId(def.modulo);
-    return activos.has(def.modulo) && !!mod;
+    // Solo módulos activos y ya construidos: el dashboard no se llena de "próximamente".
+    return activos.has(def.modulo) && !!mod && disponible(mod);
   });
 }
 

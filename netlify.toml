@@ -1,12 +1,21 @@
 [build]
-  command = "npm run revisar"
-  publish = "web"
+  # Compila, prueba, aplica migraciones pendientes en Supabase y construye la app.
+  # Si una prueba falla, no se publica nada.
+  command = "npm run revisar && npm run migrar && npm run build"
+  publish = "dist"
 
 [functions]
   node_bundler = "esbuild"
+  included_files = ["supabase/migrations/*.sql"]
 
 # Meta llama a https://TU-SITIO.netlify.app/webhook
 [[redirects]]
   from = "/webhook"
   to = "/.netlify/functions/whatsapp"
+  status = 200
+
+# App de una sola página: cualquier ruta que no sea un archivo ni una API carga la app.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
   status = 200
