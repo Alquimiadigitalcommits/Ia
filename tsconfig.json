@@ -16,6 +16,8 @@
     "src",
     "scripts",
     "netlify",
+    "tests",
+    "shared",
     "clientes.json"
   ]
 }

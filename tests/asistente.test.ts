@@ -11,7 +11,7 @@ function contexto(extra: Partial<ContextoHerramientas> = {}) {
   const creadas: any[] = [];
   const archivadas: string[] = [];
   const notion: ClienteNotion = {
-    pedir: vi.fn(async (_m, ruta, cuerpo: any) => { if (cuerpo?.archived) archivadas.push(ruta); return {}; }),
+    pedir: vi.fn(async (_m: string, ruta: string, cuerpo: any) => { if (cuerpo?.archived) archivadas.push(ruta); return {}; }) as any,
     consultar: vi.fn(async () => []),
     actualizarPagina: vi.fn(async () => ({ properties: {} })),
     crearPagina: vi.fn(async (db, properties) => { creadas.push({ db, properties }); return { id: `p${creadas.length}`, url: "u" }; }),
@@ -38,7 +38,7 @@ function contexto(extra: Partial<ContextoHerramientas> = {}) {
   return { ctx, creadas, archivadas, filas, vaciadas };
 }
 
-const herramienta = (lista: ReturnType<typeof crearHerramientas>, nombre: string) => lista.find((h) => h.name === nombre)!;
+const herramienta = (lista: ReturnType<typeof crearHerramientas>, nombre: string): any => lista.find((h) => h.name === nombre)!;
 
 describe("asistente: permisos", () => {
   it("equipo y clientes SOLO tienen guardar_idea (no ven finanzas ni salud)", () => {
