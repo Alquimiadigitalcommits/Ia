@@ -229,10 +229,11 @@ dialog::backdrop { background: rgba(20, 20, 20, 0.55); }
 
 @media (max-width: 760px) {
   body { font-size: 14px; }
-  .app { display: flex; flex-direction: column; gap: 22px; padding: 16px 16px calc(88px + env(safe-area-inset-bottom)); }
+  .app { display: flex; flex-direction: column; gap: 22px; padding: 16px 16px calc(160px + env(safe-area-inset-bottom)); }
   .menu {
     position: fixed; z-index: 10; left: 12px; right: 12px; top: auto;
-    bottom: calc(12px + env(safe-area-inset-bottom)); height: auto;
+    /* 76px: deja libre el sello "Powered by Netlify" del plan gratis, abajo a la derecha */
+    bottom: calc(76px + env(safe-area-inset-bottom)); height: auto;
     flex-direction: row; justify-content: space-around; padding: 8px; border-radius: 20px;
   }
   .marca, .menu-titulo, .menu-item[href^="https"] { display: none; }
