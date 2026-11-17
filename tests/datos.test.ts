@@ -198,3 +198,40 @@ describe("configuración de módulos y widgets", () => {
     expect(e?.status).toBe(403);
   });
 });
+
+describe("endurecimiento para Supabase (privilegios por defecto)", () => {
+  it("una persona con sesión NO puede borrar ni vaciar tablas, aunque Supabase lo conceda por defecto", async () => {
+    const t = await bd.transaccion(web(), (q) => repo.crear(q, tareas, { titulo: "x" }));
+    expect((await fallaCon(bd.transaccion(web(), (q) => q("delete from tareas where id = $1", [t.id]))))?.status).toBe(403);
+    expect((await fallaCon(bd.transaccion(web(), (q) => q("truncate tareas"))))?.status).toBe(403);
+  });
+  it("un visitante sin sesión (anon) no puede leer nada", async () => {
+    await bd.transaccion(web(), (q) => repo.crear(q, tareas, { titulo: "privada" }));
+    const r = await bd.consultarComoAdmin(`
+      select has_table_privilege('anon', 'tareas', 'select') as leer,
+             has_table_privilege('anon', 'perfiles', 'insert') as escribir,
+             has_function_privilege('anon', 'privado.tiene_acceso(area_datos, boolean)', 'execute') as ejecutar`);
+    expect(r[0]).toEqual({ leer: false, escribir: false, ejecutar: false });
+  });
+});
+
+describe("funciones internas fuera de la API pública", () => {
+  it("no quedan funciones en el esquema public (Supabase lo expone como /rest/v1/rpc)", async () => {
+    const r = await bd.consultarComoAdmin("select proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and proname in ('tiene_acceso', 'canal_actual')");
+    expect(r).toEqual([]);
+  });
+  it("después de moverlas, los permisos por canal siguen funcionando", async () => {
+    await bd.transaccion(web(), (q) => repo.crear(q, tareas, { titulo: "Salud", area: "salud" }));
+    expect(await bd.transaccion(whatsapp(), (q) => repo.listar(q, tareas))).toHaveLength(0);
+    expect(await bd.transaccion(web(), (q) => repo.listar(q, tareas))).toHaveLength(1);
+  });
+});
+
+describe("conexión a Supabase", async () => {
+  const { urlAlternativa } = await import("../src/datos/bd.js");
+  it("alterna entre los dos grupos de servidores de la región", () => {
+    expect(urlAlternativa("postgresql://u:p@aws-0-sa-east-1.pooler.supabase.com:6543/postgres")).toBe("postgresql://u:p@aws-1-sa-east-1.pooler.supabase.com:6543/postgres");
+    expect(urlAlternativa("postgresql://u:p@aws-1-sa-east-1.pooler.supabase.com:6543/postgres")).toBe("postgresql://u:p@aws-0-sa-east-1.pooler.supabase.com:6543/postgres");
+    expect(urlAlternativa("postgresql://u:p@localhost:5432/postgres")).toBeNull();
+  });
+});

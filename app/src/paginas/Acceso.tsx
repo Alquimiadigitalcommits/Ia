@@ -27,8 +27,12 @@ export function Acceso() {
           <label>Correo<input type="email" autoComplete="email" value={correo} onChange={(e) => setCorreo(e.target.value)} required /></label>
           <button className="boton" disabled={enviando}>{enviando ? "Enviando…" : "Recibir enlace para entrar"}</button>
         </form>
-        <div className="separador-texto"><span>o</span></div>
-        <button className="boton secundario ancho" onClick={google}>Entrar con Google</button>
+        {import.meta.env.VITE_GOOGLE_HABILITADO === "1" && (
+          <>
+            <div className="separador-texto"><span>o</span></div>
+            <button className="boton secundario ancho" onClick={google}>Entrar con Google</button>
+          </>
+        )}
         {estado && <p className={estado.tipo === "ok" ? "aviso-ok" : "error"} role="status">{estado.texto}</p>}
       </div>
     </main>

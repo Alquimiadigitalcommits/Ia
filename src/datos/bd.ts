@@ -121,10 +121,40 @@ export async function bdPGlite(directorio?: string): Promise<BaseDatos> {
   };
 }
 
+/**
+ * Supabase tiene dos grupos de servidores de conexión por región (aws-0 y aws-1) y cada proyecto
+ * vive en uno solo. Si el configurado responde "Tenant or user not found", se prueba el otro.
+ */
+export function urlAlternativa(url: string): string | null {
+  if (/aws-0-[a-z0-9-]+\.pooler\.supabase\.com/.test(url)) return url.replace(/aws-0-/, "aws-1-");
+  if (/aws-1-[a-z0-9-]+\.pooler\.supabase\.com/.test(url)) return url.replace(/aws-1-/, "aws-0-");
+  return null;
+}
+
+async function conectarConAlternativa(url: string): Promise<BaseDatos> {
+  const bd = await bdPostgres(url);
+  try {
+    await bd.consultarComoAdmin("select 1");
+    return bd;
+  } catch (e) {
+    const alternativa = urlAlternativa(url);
+    if (!alternativa || !/tenant or user not found/i.test((e as Error).message)) throw e;
+    await bd.cerrar().catch(() => {});
+    console.warn("Supabase: usando el otro servidor de conexión de la región");
+    const otra = await bdPostgres(alternativa);
+    await otra.consultarComoAdmin("select 1");
+    return otra;
+  }
+}
+
 let instancia: Promise<BaseDatos> | undefined;
 /** Base de datos de producción (Supabase). Una por proceso. */
 export function bdDesdeEntorno(): Promise<BaseDatos> {
   const url = process.env.SUPABASE_DB_URL;
   if (!url) throw new Error("Falta SUPABASE_DB_URL: la base de datos no está configurada.");
-  return (instancia ??= bdPostgres(url));
+  instancia ??= conectarConAlternativa(url).catch((e) => {
+    instancia = undefined; // que el próximo intento vuelva a probar
+    throw e;
+  });
+  return instancia;
 }

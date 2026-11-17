@@ -60,3 +60,32 @@
 - La salud en Notion (medicamentos, ciclo) sigue ahí hasta la fase 2, que la migra a la base con cifrado.
 - La papelera no se vacía de forma definitiva: borrar de verdad requerirá una confirmación explícita.
 - Para publicar en Google Play (TWA) falta el archivo `assetlinks.json` con la firma de la app. Va en la fase 7.
+
+---
+
+## Supabase configurado (17-11-2026)
+
+| Qué | Estado |
+|---|---|
+| Proyecto | `alquimia-mi-dia` · São Paulo (sa-east-1) · plan Free · activo |
+| Migraciones aplicadas | `base`, `endurecer_supabase`, `funciones_privadas` |
+| Seguridad por fila (RLS) | ✅ Activa en las 8 tablas, con sus políticas |
+| Visitantes anónimos | ✅ Sin acceso a ninguna tabla |
+| Borrado físico | ✅ Bloqueado para personas con sesión (Supabase lo concede por defecto: se retiró) |
+| Funciones internas | ✅ Fuera de la API pública (esquema `privado`) |
+| Avisos de seguridad de Supabase | ✅ 0 |
+| Usuario de la API `mi_dia_api` | ✅ Sin superusuario, sin saltarse RLS, sin crear tablas; solo puede actuar como "persona con sesión" |
+| Firma de sesiones | ES256 con llaves públicas (la API las verifica sin secretos) |
+| Variables en Netlify | ✅ `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (llave publicable), `SUPABASE_URL` |
+
+### Hallazgos de la auditoría en Supabase real
+
+1. **Supabase concede DELETE y TRUNCATE por defecto** a las personas con sesión y a visitantes anónimos. Con eso, la papelera se podía saltar llamando directo a la API REST de Supabase. Se retiró, y las pruebas ahora simulan esos permisos por defecto para detectarlo.
+2. **Dos funciones internas estaban expuestas** en `/rest/v1/rpc/`. Se movieron a un esquema privado.
+3. **La conexión de la API usa un usuario propio con mínimo privilegio**, no la contraseña maestra. Las migraciones se aplican desde Supabase y no desde la publicación.
+
+### Pendiente (requiere a la dueña de la cuenta)
+
+- Definir la contraseña de `mi_dia_api` y cargar `SUPABASE_DB_URL` en Netlify. Así la contraseña nunca pasa por el chat.
+- Authentication → URL Configuration → Site URL `https://alquimia-mi-dia.netlify.app`. Sin esto, el enlace del correo apunta a `localhost`.
+- Verificación de certificado TLS contra la base: la conexión va cifrada, pero sin validar el certificado de Supabase (falta cargar su certificado raíz).
